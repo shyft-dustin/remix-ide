@@ -20,12 +20,30 @@ const styles = styleguide.chooser()
 module.exports = class RighthandPanel {
   constructor (api = {}, events = {}, opts = {}) {
     const self = this
-    self._api = api
-    self._events = events
-    self._opts = opts
     self.event = new EventManager()
-    self._view = { el: null, tabbedMenu: null, tabbedMenuViewport: null, dragbar: null }
-    self._components = {}
+    self._api = api
+    self._api.switchTab = x => { // @TODO: refactor
+      if (self._view.tabbedMenu) self._view.tabbedMenu.selectTabByClassName(x)
+    }
+    self._events = events
+    self._events.rhp = self.event // @TODO: refactor
+    self._opts = opts
+    self._view = {
+      element: null,
+      tabbedMenu: null,
+      tabbedMenuViewport: null,
+      dragbar: null
+    }
+    self._components = {
+      pluginManager: null,
+      tabbedMenu: null,
+      compileTab: null,
+      runTab: null,
+      settingsTab: null,
+      analysisTab: null,
+      debuggerTab: null,
+      supportTab: null
+    }
 
     const optionViews = yo`<div id="optionViews"></div>`
     self._view.dragbar = yo`<div id="dragbar" class=${css.dragbar}></div>`
@@ -43,13 +61,7 @@ module.exports = class RighthandPanel {
           </div>
           ${optionViews}
         </div>
-      </div>
-    `
-    // selectTabByClassName
-    self._api.switchTab = tabClass => self._view.tabbedMenu.selectTabByClassName(tabClass)
-
-    self._events.rhp = self.event
-
+      </div>`
     const compileTab = new CompileTab(self._api, self._events, self._opts)
     optionViews.appendChild(compileTab.render())
     const runTab = new RunTab(self._api, self._events, self._opts)
@@ -84,10 +96,8 @@ module.exports = class RighthandPanel {
     return self._view.element
   }
   init () {
+    // @TODO: init is for resizable drag bar only and should be refactored in the future
     const self = this
-    // ;[...options.children].forEach((el) => { el.classList.add(css.options) })
-
-    // ----------------- resizeable ui ---------------
     const limit = 60
     self._view.dragbar.addEventListener('mousedown', mousedown)
     const ghostbar = yo`<div class=${css.ghostbar}></div>`
